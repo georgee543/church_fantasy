@@ -244,15 +244,22 @@
             box-shadow: 0 6px 20px rgba(0, 255, 133, 0.5);
         }
 
-        #messageBox {
-            margin-top: 15px;
-            font-size: 0.9rem;
+        .auth-toggle {
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .auth-toggle span {
+            color: var(--secondary-color);
+            cursor: pointer;
             font-weight: 600;
+            text-decoration: underline;
         }
 
         /* Squad Page Layout */
         .squad-layout {
-            display: none;
+            display: grid;
             grid-template-columns: 1fr 340px;
             gap: 25px;
         }
@@ -323,7 +330,7 @@
     </div>
 
     <main class="main-content">
-        <!-- شاشة التسجيل الأصلية -->
+        <!-- شاشة التسجيل الأولى -->
         <div class="auth-container" id="authBox">
             <h2>Mar Girgis Fantasy</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">Welcome to Church League</p>
@@ -336,13 +343,13 @@
                 <button type="submit" class="btn-primary">Enter League</button>
             </form>
             
-            <div id="messageBox"></div>
+            <div id="messageBox" style="margin-top: 15px; font-weight: 600;"></div>
         </div>
 
-        <!-- التشكيلة والملعب (تظهر بعد التسجيل) -->
-        <div class="squad-layout" id="gameLayout">
+        <!-- واجهة اللعبة الأصلية (الملعب والمانجمنت) -->
+        <div class="squad-layout" id="gameLayout" style="display: none;">
             <div class="pitch-container">
-                <div style="text-align: center; z-index: 2;">
+                <div style="text-align: center; z-index: 2; margin: auto;">
                     <h2 style="color: #fff; margin-bottom: 10px;"><i class="fa-solid fa-shield-halved"></i> تشكيلة فريقك أصبحت جاهزة!</h2>
                     <p style="color: var(--secondary-color); font-size: 1.1rem;">أهلاً بيك في دوري كنيسة مارجرجس للفانتسي ⚽🔥</p>
                 </div>
@@ -379,7 +386,7 @@
             }
 
             messageBox.style.color = '#00ff85';
-            messageBox.innerText = 'Welcome ' + teamName + '! Entering...';
+            messageBox.innerText = 'Welcome ' + teamName + '! Entering Game...';
 
             setTimeout(() => {
                 document.getElementById('authBox').style.display = 'none';

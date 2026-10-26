@@ -1,1537 +1,383 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mar Girgis Church Fantasy League</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        
-        .pitch-bg {
-            background: linear-gradient(to bottom, #15803d, #166534);
-            border: 2px solid #22c55e;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .pitch-bg::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-50%);
-        }
-        
-        .pitch-bg::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 120px;
-            height: 120px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
+        :root {
+            --primary: #38003c;
+            --secondary: #00ff87;
+            --accent: #e90052;
+            --bg: #120014;
+            --card-bg: #240029;
+            --text: #ffffff;
         }
 
-        .gold-gradient {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
         }
-        
-        .card-glass {
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(8px);
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--card-bg));
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 255, 135, 0.2);
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--secondary);
+            font-size: 2.2rem;
+        }
+
+        .deadline-banner {
+            background-color: var(--accent);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .tab-content.active {
+            display: block;
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+
+        .form-group {
+            margin-bottom: 15px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 3px;
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button.btn-submit {
+            background: var(--secondary);
+            color: var(--primary);
+            border: none;
+            padding: 12px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        button.btn-submit:hover {
+            background: #00cc6a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            color: var(--secondary);
+        }
+
+        .status-msg {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .status-success {
+            background-color: rgba(0, 255, 135, 0.2);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .admin-section {
+            border-bottom: 1px dashed rgba(255,255,255,0.2);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body>
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="bg-red-700 text-white p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10 shadow-lg border border-red-500">
-                    <i class="fa-solid font-black">MG</i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold text-white tracking-wide leading-tight">Mar Girgis Fantasy</h1>
-                    <p class="text-xs text-amber-400 font-semibold">Official Church League</p>
-                </div>
-            </div>
-
-            <!-- User Status / Admin Button / Logout -->
-            <div class="flex items-center gap-2 sm:gap-4" id="nav-actions">
-                <!-- Injected by JS -->
-            </div>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <nav class="bg-slate-950 border-t border-slate-800/80">
-            <div class="max-w-7xl mx-auto flex overflow-x-auto text-sm font-medium px-2">
-                <button onclick="switchTab('my-squad')" id="tab-my-squad" class="py-3 px-4 border-b-2 border-amber-500 text-amber-400 font-bold flex items-center gap-2 whitespace-nowrap transition">
-                    <i class="fa-solid fa-shirt"></i> My Squad
-                </button>
-                <button onclick="switchTab('transfers')" id="tab-transfers" class="py-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 whitespace-nowrap transition">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Transfers
-                </button>
-                <button onclick="switchTab('standings')" id="tab-standings" class="py-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 whitespace-nowrap transition">
-                    <i class="fa-solid fa-trophy"></i> Standings
-                </button>
-                <button onclick="switchTab('fixtures')" id="tab-fixtures" class="py-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 whitespace-nowrap transition">
-                    <i class="fa-solid fa-calendar-days"></i> Fixtures
-                </button>
-                <button onclick="switchTab('news')" id="tab-news" class="py-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 whitespace-nowrap transition">
-                    <i class="fa-solid fa-newspaper"></i> News & Rules
-                </button>
-                <button onclick="switchTab('admin')" id="tab-admin" class="py-3 px-4 border-b-2 border-transparent text-red-400 hover:text-red-300 flex items-center gap-2 whitespace-nowrap transition hidden">
-                    <i class="fa-solid fa-user-shield"></i> Management
-                </button>
-            </div>
-        </nav>
+<div class="container">
+    <header>
+        <h1>فانتازي كنيسة مار جرجس 🏆</h1>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto w-full px-4 py-6 flex-1">
-
-        <!-- Banner Announcement / Deadline Status -->
-        <div class="mb-6 card-glass p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-amber-500">
-            <div class="flex items-center gap-3">
-                <div class="bg-amber-500/20 text-amber-400 p-3 rounded-lg text-xl">
-                    <i class="fa-solid fa-clock"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-white text-base">Gameweek Deadline Status</h3>
-                    <p class="text-xs text-slate-400" id="deadline-display">Loading Deadline Information...</p>
-                </div>
-            </div>
-            <div id="deadline-timer" class="text-center font-mono font-bold text-lg text-amber-400 bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-700">
-                00d 00h 00m 00s
-            </div>
-        </div>
-
-        <!-- AUTH MODAL CONTAINER (LOGIN / REGISTER) -->
-        <div id="auth-section" class="max-w-md mx-auto my-8 card-glass p-6 sm:p-8 rounded-2xl shadow-2xl border border-slate-700">
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-black text-white" id="auth-title">Manager Login</h2>
-                <p class="text-xs text-slate-400 mt-1">Welcome to Mar Girgis Church Fantasy League</p>
-            </div>
-
-            <!-- Login Form -->
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Username</label>
-                    <input type="text" id="login-username" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                </div>
-                <button type="submit" class="w-full gold-gradient text-slate-950 font-bold py-3 rounded-lg hover:brightness-110 transition shadow-lg text-sm uppercase tracking-wider">
-                    Sign In
-                </button>
-                <div class="text-center pt-2">
-                    <button type="button" onclick="toggleAuthMode(true)" class="text-xs text-amber-400 hover:underline">
-                        Don't have an account? Register Team
-                    </button>
-                </div>
-            </form>
-
-            <!-- Register Form -->
-            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name / Username</label>
-                    <input type="text" id="reg-username" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Team Name</label>
-                    <input type="text" id="reg-teamname" placeholder="e.g. St George Champions" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-                    <input type="password" id="reg-password" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                </div>
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition shadow-lg text-sm uppercase tracking-wider">
-                    Create Team & Join League
-                </button>
-                <div class="text-center pt-2">
-                    <button type="button" onclick="toggleAuthMode(false)" class="text-xs text-amber-400 hover:underline">
-                        Already registered? Login here
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- APP CONTENT SECTIONS -->
-        <div id="app-content" class="hidden">
-
-            <!-- TAB 1: MY SQUAD -->
-            <div id="sec-my-squad" class="space-y-6">
-                <!-- User Summary Header -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div class="card-glass p-3 rounded-xl border-l-4 border-amber-500">
-                        <p class="text-[10px] text-slate-400 uppercase font-bold">Team Name</p>
-                        <p class="text-sm sm:text-base font-extrabold text-white truncate" id="user-team-display">--</p>
-                    </div>
-                    <div class="card-glass p-3 rounded-xl border-l-4 border-green-500">
-                        <p class="text-[10px] text-slate-400 uppercase font-bold">Total Points</p>
-                        <p class="text-base sm:text-lg font-black text-green-400" id="user-points-display">0 pts</p>
-                    </div>
-                    <div class="card-glass p-3 rounded-xl border-l-4 border-blue-500">
-                        <p class="text-[10px] text-slate-400 uppercase font-bold">Free Transfers</p>
-                        <p class="text-base sm:text-lg font-black text-blue-400" id="user-transfers-display">0</p>
-                    </div>
-                    <div class="card-glass p-3 rounded-xl border-l-4 border-purple-500">
-                        <p class="text-[10px] text-slate-400 uppercase font-bold">Active Chip</p>
-                        <p class="text-sm font-bold text-purple-300" id="user-active-chip-display">None</p>
-                    </div>
-                </div>
-
-                <!-- Chips Activation Controls -->
-                <div class="card-glass p-4 rounded-xl">
-                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-bolt text-amber-400"></i> Available Chips (2 Uses Each Allowed Per Account)
-                    </h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <button onclick="activateChip('Triple Captain')" id="chip-btn-tc" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg flex flex-col items-center justify-center gap-1 text-center transition">
-                            <span class="font-bold text-amber-400">Triple Captain (3x)</span>
-                            <span class="text-[10px] text-slate-400" id="chip-count-tc">2 Left</span>
-                        </button>
-                        <button onclick="activateChip('Wildcard')" id="chip-btn-wc" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg flex flex-col items-center justify-center gap-1 text-center transition">
-                            <span class="font-bold text-blue-400">Wildcard (Free Transfers)</span>
-                            <span class="text-[10px] text-slate-400" id="chip-count-wc">2 Left</span>
-                        </button>
-                        <button onclick="activateChip('Free Hit')" id="chip-btn-fh" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg flex flex-col items-center justify-center gap-1 text-center transition">
-                            <span class="font-bold text-green-400">Free Hit (1 GW Reset)</span>
-                            <span class="text-[10px] text-slate-400" id="chip-count-fh">2 Left</span>
-                        </button>
-                        <button onclick="activateChip('Bench Boost')" id="chip-btn-bb" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2.5 rounded-lg flex flex-col items-center justify-center gap-1 text-center transition">
-                            <span class="font-bold text-purple-400">Bench Boost (7 Players)</span>
-                            <span class="text-[10px] text-slate-400" id="chip-count-bb">2 Left</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Pitch and Bench Container -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Starting 5 Tactical Pitch -->
-                    <div class="lg:col-span-2">
-                        <div class="pitch-bg rounded-2xl p-4 sm:p-6 min-h-[460px] flex flex-col justify-between border-2 border-green-500 shadow-2xl">
-                            <div class="text-center font-bold text-xs uppercase tracking-widest text-green-200/60 bg-black/30 py-1 rounded-full px-4 self-center mb-2">
-                                Starting XI - 5 Active Players
-                            </div>
-
-                            <!-- GK Zone -->
-                            <div class="flex justify-center my-2">
-                                <div id="pitch-gk" class="flex justify-center"></div>
-                            </div>
-
-                            <!-- DEF Zone -->
-                            <div class="flex justify-around my-2">
-                                <div id="pitch-def" class="flex justify-around w-full max-w-md"></div>
-                            </div>
-
-                            <!-- MID Zone -->
-                            <div class="flex justify-around my-2">
-                                <div id="pitch-mid" class="flex justify-around w-full max-w-md"></div>
-                            </div>
-
-                            <!-- FWD Zone -->
-                            <div class="flex justify-around my-2">
-                                <div id="pitch-fwd" class="flex justify-around w-full max-w-md"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bench Section (2 Players) -->
-                    <div class="space-y-4">
-                        <div class="card-glass p-4 rounded-xl">
-                            <h3 class="text-sm font-bold text-white mb-3 flex items-center justify-between border-b border-slate-700 pb-2">
-                                <span><i class="fa-solid fa-chair text-amber-400 mr-2"></i> Bench (2 Substitutes)</span>
-                                <span class="text-[10px] text-slate-400 font-normal">Auto-swaps on deadline</span>
-                            </h3>
-                            <div id="bench-container" class="space-y-3">
-                                <!-- Bench Slots Rendered Here -->
-                            </div>
-                        </div>
-
-                        <!-- Instructions Card -->
-                        <div class="card-glass p-4 rounded-xl text-xs space-y-2 text-slate-300 border-l-4 border-blue-500">
-                            <p class="font-bold text-white text-sm"><i class="fa-solid fa-circle-info text-blue-400 mr-1"></i> Quick Tips:</p>
-                            <p>• Click <span class="bg-amber-500/30 text-amber-300 font-bold px-1 rounded">C</span> to assign Captain (2x Points).</p>
-                            <p>• Click <span class="bg-slate-700 text-slate-200 font-bold px-1 rounded">VC</span> to assign Vice-Captain.</p>
-                            <p>• Click <span class="bg-blue-600/30 text-blue-300 font-bold px-1 rounded">Sub</span> on a starter and bench player to swap them.</p>
-                            <p>• Changes lock automatically when the Admin deadline passes.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: TRANSFERS -->
-            <div id="sec-transfers" class="hidden space-y-6">
-                <!-- Budget & Transfer Bar -->
-                <div class="card-glass p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 border-l-4 border-amber-500">
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Transfers Market</h2>
-                        <p class="text-xs text-slate-400">Total Budget: <span class="text-amber-400 font-bold">£50.0M</span> | Build your 7-player squad</p>
-                    </div>
-                    <div class="flex items-center gap-4 text-sm font-bold">
-                        <div class="bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                            <span class="text-slate-400">Remaining Budget: </span>
-                            <span class="text-green-400 font-extrabold" id="transfer-budget-display">£50.0M</span>
-                        </div>
-                        <div class="bg-slate-900 px-3 py-2 rounded-lg border border-slate-700">
-                            <span class="text-slate-400">Squad Count: </span>
-                            <span class="text-amber-400 font-extrabold" id="transfer-count-display">0 / 7</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Squad Selection Overview vs Market -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <!-- Current Selected Squad -->
-                    <div class="lg:col-span-5 space-y-3">
-                        <div class="card-glass p-4 rounded-xl">
-                            <h3 class="text-sm font-bold text-white mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
-                                <span>Current Selected 7 Players</span>
-                                <button onclick="autoFillSquad()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded border border-slate-700">Auto Pick</button>
-                            </h3>
-                            <div id="selected-transfer-list" class="space-y-2 min-h-[300px]">
-                                <!-- Selected Players List -->
-                            </div>
-                            <button onclick="saveTransfers()" id="save-transfers-btn" class="w-full mt-4 gold-gradient text-slate-950 font-bold py-3 rounded-lg shadow-lg hover:brightness-110 transition text-sm uppercase">
-                                Confirm & Save Squad
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Market Available Players -->
-                    <div class="lg:col-span-7 space-y-4">
-                        <div class="card-glass p-4 rounded-xl">
-                            <!-- Filter Controls -->
-                            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                                <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-700 text-xs font-semibold">
-                                    <button onclick="filterMarket('ALL')" class="pos-filter-btn px-3 py-1.5 rounded-md bg-amber-500 text-slate-950 font-bold">ALL</button>
-                                    <button onclick="filterMarket('GK')" class="pos-filter-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white">GK</button>
-                                    <button onclick="filterMarket('DEF')" class="pos-filter-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white">DEF</button>
-                                    <button onclick="filterMarket('MID')" class="pos-filter-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white">MID</button>
-                                    <button onclick="filterMarket('FWD')" class="pos-filter-btn px-3 py-1.5 rounded-md text-slate-400 hover:text-white">FWD</button>
-                                </div>
-                                <input type="text" id="player-search-input" onkeyup="renderMarketList()" placeholder="Search player name..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                            </div>
-
-                            <!-- Market Table -->
-                            <div class="overflow-x-auto max-h-[480px]">
-                                <table class="w-full text-left text-xs text-slate-300">
-                                    <thead class="bg-slate-900/90 text-slate-400 font-semibold uppercase sticky top-0 border-b border-slate-700">
-                                        <tr>
-                                            <th class="p-2.5">Player</th>
-                                            <th class="p-2.5">Pos</th>
-                                            <th class="p-2.5 text-center">Price</th>
-                                            <th class="p-2.5 text-center">Total Pts</th>
-                                            <th class="p-2.5 text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="market-players-tbody" class="divide-y divide-slate-800">
-                                        <!-- Player Row Items -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: STANDINGS -->
-            <div id="sec-standings" class="hidden space-y-6">
-                <div class="card-glass p-4 rounded-xl border-l-4 border-amber-500 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Mar Girgis Church League Standings</h2>
-                        <p class="text-xs text-slate-400">All registered managers ranked by official accumulated points</p>
-                    </div>
-                    <div class="bg-amber-500/20 text-amber-400 p-3 rounded-lg text-xl">
-                        <i class="fa-solid fa-ranking-star"></i>
-                    </div>
-                </div>
-
-                <div class="card-glass rounded-xl overflow-hidden shadow-xl border border-slate-800">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="bg-slate-900/90 text-xs uppercase font-bold text-slate-400 border-b border-slate-800">
-                                <tr>
-                                    <th class="p-3 text-center w-12">Rank</th>
-                                    <th class="p-3">Manager & Team</th>
-                                    <th class="p-3 text-center">Active Chip</th>
-                                    <th class="p-3 text-right">Total Points</th>
-                                </tr>
-                            </thead>
-                            <tbody id="standings-tbody" class="divide-y divide-slate-800/60">
-                                <!-- Standings rows rendered here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: FIXTURES -->
-            <div id="sec-fixtures" class="hidden space-y-6">
-                <div class="card-glass p-4 rounded-xl border-l-4 border-blue-500 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-lg font-bold text-white">Match Fixtures & Results</h2>
-                        <p class="text-xs text-slate-400">Weekly church tournament match schedules</p>
-                    </div>
-                    <div class="bg-blue-500/20 text-blue-400 p-3 rounded-lg text-xl">
-                        <i class="fa-solid fa-calendar-check"></i>
-                    </div>
-                </div>
-
-                <div id="fixtures-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Fixture Cards Injected Here -->
-                </div>
-            </div>
-
-            <!-- TAB 5: NEWS & RULES -->
-            <div id="sec-news" class="hidden space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Admin News Stream -->
-                    <div class="lg:col-span-2 space-y-4">
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-amber-400"></i> Latest League Announcements
-                        </h2>
-                        <div id="news-posts-container" class="space-y-4">
-                            <!-- News cards injected here -->
-                        </div>
-                    </div>
-
-                    <!-- Church Fantasy Rules -->
-                    <div class="space-y-4">
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-book text-green-400"></i> Point Scoring Rules
-                        </h2>
-                        <div class="card-glass p-4 rounded-xl space-y-3 text-xs text-slate-300">
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Playing 15+ Minutes</span>
-                                <span class="font-bold text-green-400">+1 pt</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Goal Scored (FWD)</span>
-                                <span class="font-bold text-green-400">+4 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Goal Scored (MID)</span>
-                                <span class="font-bold text-green-400">+5 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Goal Scored (DEF/GK)</span>
-                                <span class="font-bold text-green-400">+6 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Goal Assist</span>
-                                <span class="font-bold text-green-400">+3 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Clean Sheet (DEF/GK)</span>
-                                <span class="font-bold text-green-400">+4 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Penalty Save</span>
-                                <span class="font-bold text-green-400">+5 pts</span>
-                            </div>
-                            <div class="flex justify-between border-b border-slate-700/60 pb-2">
-                                <span class="text-slate-400">Yellow Card</span>
-                                <span class="font-bold text-red-400">-1 pt</span>
-                            </div>
-                            <div class="flex justify-between pb-1">
-                                <span class="text-slate-400">Red Card</span>
-                                <span class="font-bold text-red-400">-3 pts</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 6: MANAGEMENT PORTAL (ADMIN ONLY) -->
-            <div id="sec-admin" class="hidden space-y-6">
-                <!-- Admin Header & Passcode Prompt -->
-                <div id="admin-auth-lock" class="max-w-md mx-auto card-glass p-6 rounded-2xl text-center space-y-4">
-                    <div class="bg-red-500/20 text-red-400 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center text-2xl">
-                        <i class="fa-solid fa-lock"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-white">Management Authorization</h2>
-                    <p class="text-xs text-slate-400">Enter secret Management Passcode to access administrative controls.</p>
-                    <input type="password" id="admin-pass-input" placeholder="Enter Passcode..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-center text-white focus:outline-none focus:border-red-500">
-                    <button onclick="unlockAdminPortal()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-lg transition text-sm">
-                        Unlock Control Panel
-                    </button>
-                </div>
-
-                <!-- Admin Main Control Interface -->
-                <div id="admin-controls-panel" class="hidden space-y-8">
-                    <!-- Deadline Settings & Transfers Limit Controls -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="card-glass p-4 rounded-xl border-l-4 border-amber-500 space-y-3">
-                            <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-clock text-amber-400"></i> Set Transfer & Lineup Deadline
-                            </h3>
-                            <div class="flex items-center gap-2">
-                                <input type="datetime-local" id="admin-deadline-input" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg p-2.5 flex-1 focus:outline-none focus:border-amber-500">
-                                <button onclick="saveDeadlineSetting()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs transition">
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="card-glass p-4 rounded-xl border-l-4 border-blue-500 space-y-3">
-                            <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-sliders text-blue-400"></i> Set Free Transfers Limit Per Manager
-                            </h3>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="admin-transfers-limit-input" min="0" max="99" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg p-2.5 flex-1 focus:outline-none focus:border-blue-500">
-                                <button onclick="saveTransfersLimitSetting()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-lg text-xs transition">
-                                    Update
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION: ADMIN INSPECTOR - VIEW ALL MANAGERS' SQUADS -->
-                    <div class="card-glass p-5 rounded-xl space-y-4 border-t-4 border-purple-500">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700 pb-3">
-                            <div>
-                                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                    <i class="fa-solid fa-eye text-purple-400"></i> Manager Squad Inspector
-                                </h3>
-                                <p class="text-xs text-slate-400">Inspect any manager's active 7-player lineup, starting 5, bench, and active chips.</p>
-                            </div>
-                            <select id="admin-squad-inspector-select" onchange="renderAdminSquadInspection()" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500">
-                                <!-- Manager Options Injected -->
-                            </select>
-                        </div>
-
-                        <!-- Inspected Squad Canvas -->
-                        <div id="admin-squad-inspection-view" class="p-4 bg-slate-950/60 rounded-xl min-h-[160px] flex items-center justify-center text-xs text-slate-400">
-                            Select a manager from the dropdown above to inspect their current 7-player squad.
-                        </div>
-                    </div>
-
-                    <!-- SECTION: PLAYER DATABASE & POINTS MANAGEMENT -->
-                    <div class="card-glass p-5 rounded-xl space-y-4">
-                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-3">
-                            <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-users-gear text-amber-400"></i> Manage Players & Update Points
-                            </h3>
-                            <button onclick="openAddPlayerModal()" class="bg-green-600 hover:bg-green-500 text-white font-bold text-xs px-3 py-2 rounded-lg flex items-center gap-1 transition">
-                                <i class="fa-solid fa-plus"></i> Add New Player
-                            </button>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-300">
-                                <thead class="bg-slate-900 text-slate-400 uppercase font-semibold border-b border-slate-800">
-                                    <tr>
-                                        <th class="p-2.5">Name</th>
-                                        <th class="p-2.5">Pos</th>
-                                        <th class="p-2.5 text-center">Price (£M)</th>
-                                        <th class="p-2.5 text-center">Total Pts</th>
-                                        <th class="p-2.5 text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-players-tbody" class="divide-y divide-slate-800">
-                                    <!-- Admin Player Row Items -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- SECTION: FIXTURES & NEWS MANAGEMENT -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Fixtures Manager -->
-                        <div class="card-glass p-5 rounded-xl space-y-4">
-                            <h3 class="text-base font-bold text-white border-b border-slate-700 pb-2 flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-plus text-blue-400"></i> Add Weekly Fixture
-                            </h3>
-                            <form onsubmit="handleAddFixture(event)" class="space-y-3">
-                                <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">Gameweek Label</label>
-                                    <input type="text" id="fix-gw-label" placeholder="e.g. Round of 16 - Matchday 1" required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Team A</label>
-                                        <input type="text" id="fix-team-a" placeholder="Team St. Mark" required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Team B</label>
-                                        <input type="text" id="fix-team-b" placeholder="Team St. George" required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Match Date / Time</label>
-                                        <input type="text" id="fix-date-time" placeholder="Friday 5:00 PM" required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                    </div>
-                                    <div>
-                                        <label class="block text-[11px] text-slate-400 mb-1">Score Result (Optional)</label>
-                                        <input type="text" id="fix-score" placeholder="e.g. 2 - 1 or TBD" class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                    </div>
-                                </div>
-                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-xs transition">
-                                    Publish Fixture
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- News Publisher -->
-                        <div class="card-glass p-5 rounded-xl space-y-4">
-                            <h3 class="text-base font-bold text-white border-b border-slate-700 pb-2 flex items-center gap-2">
-                                <i class="fa-solid fa-pen-to-square text-green-400"></i> Publish Announcement / News
-                            </h3>
-                            <form onsubmit="handleAddNews(event)" class="space-y-3">
-                                <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">News Title</label>
-                                    <input type="text" id="news-title-input" placeholder="e.g. Important Match Rules Update" required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">Announcement Details</label>
-                                    <textarea id="news-body-input" rows="3" placeholder="Write news text or guidelines here..." required class="w-full bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white"></textarea>
-                                </div>
-                                <button type="submit" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs transition">
-                                    Post News Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Modal for Adding / Editing Player -->
-    <div id="player-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="card-glass max-w-md w-full p-6 rounded-2xl border border-slate-700 space-y-4">
-            <h3 id="player-modal-title" class="text-lg font-bold text-white">Add New Player</h3>
-            <form onsubmit="handleSavePlayer(event)" class="space-y-3">
-                <input type="hidden" id="modal-player-id">
-                <div>
-                    <label class="block text-xs text-slate-300 mb-1">Player Name</label>
-                    <input type="text" id="modal-player-name" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-300 mb-1">Position</label>
-                        <select id="modal-player-pos" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
-                            <option value="GK">GK (Goalkeeper)</option>
-                            <option value="DEF">DEF (Defender)</option>
-                            <option value="MID">MID (Midfielder)</option>
-                            <option value="FWD">FWD (Forward)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-300 mb-1">Price (£M)</label>
-                        <input type="number" step="0.5" id="modal-player-price" min="3.0" max="15.0" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-300 mb-1">Total Points</label>
-                    <input type="number" id="modal-player-points" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closePlayerModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg text-xs">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs">Save Player</button>
-                </div>
-            </form>
-        </div>
+    <div class="deadline-banner" id="deadlineDisplay">
+        جاري تحميل الديدلاين...
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-slate-950 border-t border-slate-900 py-4 text-center text-xs text-slate-500">
-        <p>© 2026 Mar Girgis Church Youth League. All Rights Reserved.</p>
-    </footer>
-
-    <!-- JavaScript Application Logic -->
-    <script>
-        // Database Connection String Configuration
-        const DATABASE_URL = "postgresql://neondb_owner:npg_UOBW8bYv5ygi@ep-red-credit-b9afqda1-pooler.c-7.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-
-        const SQUAD_BUDGET = 50.0;
-        const SQUAD_SIZE = 7;
-        const STARTERS_SIZE = 5;
-
-        const DEFAULT_PLAYERS = [
-            { id: 1, name: "Kirollos Mina", position: "GK", price: 6.0, points: 12 },
-            { id: 2, name: "Fadi Nader", position: "GK", price: 5.5, points: 8 },
-            { id: 3, name: "Mark Sameh", position: "DEF", price: 7.0, points: 15 },
-            { id: 4, name: "George Nader", position: "DEF", price: 7.5, points: 22 },
-            { id: 5, name: "Michael Bishoy", position: "DEF", price: 6.5, points: 10 },
-            { id: 6, name: "Andrew Youssef", position: "MID", price: 8.5, points: 31 },
-            { id: 7, name: "Peter Nessim", position: "MID", price: 8.0, points: 26 },
-            { id: 8, name: "David Emad", position: "MID", price: 7.5, points: 18 },
-            { id: 9, name: "Tony Magdy", position: "FWD", price: 9.0, points: 38 },
-            { id: 10, name: "Youssef Ashraf", position: "FWD", price: 8.5, points: 29 },
-            { id: 11, name: "John Nabil", position: "FWD", price: 7.0, points: 14 }
-        ];
-
-        let players = JSON.parse(localStorage.getItem('mg_players')) || DEFAULT_PLAYERS;
-        let users = JSON.parse(localStorage.getItem('mg_users')) || [];
-        let fixtures = JSON.parse(localStorage.getItem('mg_fixtures')) || [
-            { id: 1, gw: "Church Tournament - Matchday 1", teamA: "St. Mark Warriors", teamB: "St. George Lions", dateTime: "Friday 5:00 PM", score: "3 - 2" },
-            { id: 2, gw: "Church Tournament - Matchday 2", teamA: "St. Peter Stars", teamB: "St. Michael Heroes", dateTime: "Saturday 6:00 PM", score: "TBD" }
-        ];
-        let news = JSON.parse(localStorage.getItem('mg_news')) || [
-            { id: 1, title: "Welcome to Mar Girgis Fantasy!", body: "Build your 7-player squad within £50.0M budget. Starting XI consists of 5 players, and 2 substitutes on the bench.", date: "Oct 2026" }
-        ];
-        let deadline = localStorage.getItem('mg_deadline') || "2026-11-01T18:00";
-        let freeTransfersLimit = parseInt(localStorage.getItem('mg_transfers_limit') || "2");
-
-        let currentUser = JSON.parse(localStorage.getItem('mg_current_user')) || null;
-        let isAdminUnlocked = false;
-        let currentPosFilter = 'ALL';
-        let tempTransferSquad = [];
-
-        function saveState() {
-            localStorage.setItem('mg_players', JSON.stringify(players));
-            localStorage.setItem('mg_users', JSON.stringify(users));
-            localStorage.setItem('mg_fixtures', JSON.stringify(fixtures));
-            localStorage.setItem('mg_news', JSON.stringify(news));
-            localStorage.setItem('mg_deadline', deadline);
-            localStorage.setItem('mg_transfers_limit', freeTransfersLimit.toString());
-            if (currentUser) {
-                localStorage.setItem('mg_current_user', JSON.stringify(currentUser));
-            } else {
-                localStorage.removeItem('mg_current_user');
-            }
-        }
-
-        function initApp() {
-            updateNavActions();
-            startDeadlineTimer();
-            renderNews();
-            renderFixtures();
-
-            if (currentUser) {
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('app-content').classList.remove('hidden');
-                initUserSquadState();
-                switchTab('my-squad');
-            } else {
-                document.getElementById('auth-section').classList.remove('hidden');
-                document.getElementById('app-content').classList.add('hidden');
-            }
-        }
-
-        function toggleAuthMode(isRegister) {
-            document.getElementById('login-form').classList.toggle('hidden', isRegister);
-            document.getElementById('register-form').classList.toggle('hidden', !isRegister);
-            document.getElementById('auth-title').innerText = isRegister ? "Register New Team" : "Manager Login";
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('login-username').value.trim();
-            const pass = document.getElementById('login-password').value;
-
-            const found = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === pass);
-            if (found) {
-                currentUser = found;
-                saveState();
-                initApp();
-            } else {
-                alert("Invalid Username or Password!");
-            }
-        }
-
-        function handleRegister(e) {
-            e.preventDefault();
-            const username = document.getElementById('reg-username').value.trim();
-            const teamName = document.getElementById('reg-teamname').value.trim();
-            const pass = document.getElementById('reg-password').value;
-
-            if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-                alert("Username is already taken. Please choose another.");
-                return;
-            }
-
-            const newUser = {
-                id: Date.now(),
-                username: username,
-                teamName: teamName,
-                password: pass,
-                points: 0,
-                freeTransfers: freeTransfersLimit,
-                squad: [],
-                starters: [],
-                bench: [],
-                captainId: null,
-                viceCaptainId: null,
-                activeChip: null,
-                chipsUsed: {
-                    'Triple Captain': 0,
-                    'Wildcard': 0,
-                    'Free Hit': 0,
-                    'Bench Boost': 0
-                }
-            };
-
-            users.push(newUser);
-            currentUser = newUser;
-            saveState();
-            initApp();
-        }
-
-        function handleLogout() {
-            currentUser = null;
-            isAdminUnlocked = false;
-            saveState();
-            location.reload();
-        }
-
-        function updateNavActions() {
-            const container = document.getElementById('nav-actions');
-            if (currentUser) {
-                container.innerHTML = `
-                    <div class="text-right hidden sm:block">
-                        <div class="text-xs font-bold text-white">${currentUser.teamName}</div>
-                        <div class="text-[10px] text-slate-400">${currentUser.username}</div>
-                    </div>
-                    <button onclick="handleLogout()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition">
-                        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
-                    </button>
-                `;
-                document.getElementById('tab-admin').classList.remove('hidden');
-            } else {
-                container.innerHTML = ``;
-                document.getElementById('tab-admin').classList.add('hidden');
-            }
-        }
-
-        function switchTab(tabId) {
-            const tabs = ['my-squad', 'transfers', 'standings', 'fixtures', 'news', 'admin'];
-            tabs.forEach(t => {
-                const sec = document.getElementById(`sec-${t}`);
-                const btn = document.getElementById(`tab-${t}`);
-                if (sec) sec.classList.add('hidden');
-                if (btn) {
-                    btn.classList.remove('border-amber-500', 'text-amber-400', 'font-bold');
-                    btn.classList.add('border-transparent', 'text-slate-400');
-                }
-            });
-
-            const targetSec = document.getElementById(`sec-${tabId}`);
-            const targetBtn = document.getElementById(`tab-${tabId}`);
-            if (targetSec) targetSec.classList.remove('hidden');
-            if (targetBtn) {
-                targetBtn.classList.remove('border-transparent', 'text-slate-400');
-                targetBtn.classList.add('border-amber-500', 'text-amber-400', 'font-bold');
-            }
-
-            if (tabId === 'my-squad') renderMySquadTab();
-            if (tabId === 'transfers') renderTransfersTab();
-            if (tabId === 'standings') renderStandings();
-            if (tabId === 'admin') renderAdminPortal();
-        }
-
-        function startDeadlineTimer() {
-            function updateTimer() {
-                const dlDate = new Date(deadline).getTime();
-                const now = new Date().getTime();
-                const diff = dlDate - now;
-
-                const disp = document.getElementById('deadline-display');
-                const timerDisp = document.getElementById('deadline-timer');
-
-                const formatted = new Date(deadline).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-                disp.innerText = `Deadline: ${formatted} | Transfers & lineups lock automatically.`;
-
-                if (diff <= 0) {
-                    timerDisp.innerText = "DEADLINE PASSED (LOCKED)";
-                    timerDisp.classList.replace('text-amber-400', 'text-red-500');
-                } else {
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const secs = Math.floor((diff % (1000 * 60)) / 1000);
-                    timerDisp.innerText = `${days}d ${hours}h ${mins}m ${secs}s`;
-                    timerDisp.classList.replace('text-red-500', 'text-amber-400');
-                }
-            }
-            updateTimer();
-            setInterval(updateTimer, 1000);
-        }
-
-        function isDeadlinePassed() {
-            return new Date().getTime() >= new Date(deadline).getTime();
-        }
-
-        function initUserSquadState() {
-            if (!currentUser) return;
-            const fresh = users.find(u => u.id === currentUser.id);
-            if (fresh) currentUser = fresh;
-            tempTransferSquad = [...(currentUser.squad || [])];
-        }
-
-        function renderMySquadTab() {
-            if (!currentUser) return;
-
-            document.getElementById('user-team-display').innerText = currentUser.teamName;
-            document.getElementById('user-points-display').innerText = `${currentUser.points} pts`;
-            document.getElementById('user-transfers-display').innerText = currentUser.freeTransfers;
-            document.getElementById('user-active-chip-display').innerText = currentUser.activeChip || "None";
-
-            const chips = currentUser.chipsUsed || {};
-            document.getElementById('chip-count-tc').innerText = `${2 - (chips['Triple Captain'] || 0)} Left`;
-            document.getElementById('chip-count-wc').innerText = `${2 - (chips['Wildcard'] || 0)} Left`;
-            document.getElementById('chip-count-fh').innerText = `${2 - (chips['Free Hit'] || 0)} Left`;
-            document.getElementById('chip-count-bb').innerText = `${2 - (chips['Bench Boost'] || 0)} Left`;
-
-            if (currentUser.squad.length < SQUAD_SIZE) {
-                document.getElementById('pitch-gk').innerHTML = `<p class="text-xs text-amber-300 bg-black/60 px-4 py-2 rounded-lg">Please go to Transfers tab to complete your 7-player squad.</p>`;
-                document.getElementById('pitch-def').innerHTML = '';
-                document.getElementById('pitch-mid').innerHTML = '';
-                document.getElementById('pitch-fwd').innerHTML = '';
-                document.getElementById('bench-container').innerHTML = '<p class="text-xs text-slate-400">Bench empty.</p>';
-                return;
-            }
-
-            renderPitchAndBench();
-        }
-
-        let selectedSubId = null;
-
-        function renderPitchAndBench() {
-            const starters = currentUser.starters.map(id => players.find(p => p.id === id)).filter(Boolean);
-            const bench = currentUser.bench.map(id => players.find(p => p.id === id)).filter(Boolean);
-
-            const gkList = starters.filter(p => p.position === 'GK');
-            const defList = starters.filter(p => p.position === 'DEF');
-            const midList = starters.filter(p => p.position === 'MID');
-            const fwdList = starters.filter(p => p.position === 'FWD');
-
-            document.getElementById('pitch-gk').innerHTML = gkList.map(p => renderPlayerCard(p, true)).join('');
-            document.getElementById('pitch-def').innerHTML = defList.map(p => renderPlayerCard(p, true)).join('');
-            document.getElementById('pitch-mid').innerHTML = midList.map(p => renderPlayerCard(p, true)).join('');
-            document.getElementById('pitch-fwd').innerHTML = fwdList.map(p => renderPlayerCard(p, true)).join('');
-
-            document.getElementById('bench-container').innerHTML = bench.map(p => renderPlayerCard(p, false)).join('');
-        }
-
-        function renderPlayerCard(player, isStarter) {
-            const isCaptain = currentUser.captainId === player.id;
-            const isVC = currentUser.viceCaptainId === player.id;
-            const isSelectedForSub = selectedSubId === player.id;
-
-            let badgeHtml = '';
-            if (isCaptain) badgeHtml = `<span class="bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded text-[10px]">C</span>`;
-            else if (isVC) badgeHtml = `<span class="bg-slate-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">VC</span>`;
-
-            if (isStarter) {
-                return `
-                    <div class="flex flex-col items-center group relative m-1">
-                        <div class="relative bg-slate-900/90 border ${isSelectedForSub ? 'border-amber-400 ring-2 ring-amber-400' : 'border-slate-700'} rounded-xl p-2 w-24 text-center shadow-lg hover:border-green-400 transition">
-                            <div class="text-[10px] font-bold text-amber-400 uppercase tracking-tighter">${player.position}</div>
-                            <div class="text-xs font-bold text-white truncate my-0.5">${player.name}</div>
-                            <div class="text-[11px] font-extrabold text-green-400">${player.points} pts</div>
-                            <div class="mt-1 flex justify-center gap-1">${badgeHtml}</div>
-                        </div>
-                        <div class="flex gap-1 mt-1">
-                            <button onclick="setRole(${player.id}, 'C')" class="text-[9px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-1.5 py-0.5 rounded">C</button>
-                            <button onclick="setRole(${player.id}, 'VC')" class="text-[9px] bg-slate-700 hover:bg-slate-600 text-white font-bold px-1.5 py-0.5 rounded">VC</button>
-                            <button onclick="handleSubClick(${player.id})" class="text-[9px] bg-blue-600 hover:bg-blue-500 text-white font-bold px-1.5 py-0.5 rounded">Sub</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                return `
-                    <div class="flex items-center justify-between bg-slate-900/80 p-2.5 rounded-lg border ${isSelectedForSub ? 'border-amber-400 ring-2 ring-amber-400' : 'border-slate-800'}">
-                        <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-bold bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded">${player.position}</span>
-                            <div>
-                                <p class="text-xs font-bold text-white">${player.name}</p>
-                                <p class="text-[10px] text-green-400 font-bold">${player.points} pts</p>
-                            </div>
-                        </div>
-                        <button onclick="handleSubClick(${player.id})" class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold px-2 py-1 rounded">
-                            ${isSelectedForSub ? 'Cancel' : 'Swap'}
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        function setRole(playerId, role) {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed! Lineups are locked.");
-                return;
-            }
-            if (role === 'C') {
-                if (currentUser.viceCaptainId === playerId) currentUser.viceCaptainId = currentUser.captainId;
-                currentUser.captainId = playerId;
-            } else if (role === 'VC') {
-                if (currentUser.captainId === playerId) currentUser.captainId = currentUser.viceCaptainId;
-                currentUser.viceCaptainId = playerId;
-            }
-            saveState();
-            renderMySquadTab();
-        }
-
-        function handleSubClick(playerId) {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed! Substitution changes are locked.");
-                return;
-            }
-
-            if (!selectedSubId) {
-                selectedSubId = playerId;
-            } else if (selectedSubId === playerId) {
-                selectedSubId = null;
-            } else {
-                const isFirstStarter = currentUser.starters.includes(selectedSubId);
-                const isSecondStarter = currentUser.starters.includes(playerId);
-
-                if (isFirstStarter !== isSecondStarter) {
-                    if (isFirstStarter) {
-                        currentUser.starters = currentUser.starters.filter(id => id !== selectedSubId);
-                        currentUser.bench = currentUser.bench.filter(id => id !== playerId);
-                        currentUser.starters.push(playerId);
-                        currentUser.bench.push(selectedSubId);
-                    } else {
-                        currentUser.starters = currentUser.starters.filter(id => id !== playerId);
-                        currentUser.bench = currentUser.bench.filter(id => id !== selectedSubId);
-                        currentUser.starters.push(selectedSubId);
-                        currentUser.bench.push(playerId);
-                    }
-                    saveState();
-                }
-                selectedSubId = null;
-            }
-            renderMySquadTab();
-        }
-
-        function activateChip(chipName) {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed! Cannot activate chips.");
-                return;
-            }
-
-            const usedCount = (currentUser.chipsUsed && currentUser.chipsUsed[chipName]) || 0;
-            if (usedCount >= 2) {
-                alert(`You have used all 2 allowed activations for ${chipName}!`);
-                return;
-            }
-
-            if (currentUser.activeChip === chipName) {
-                currentUser.activeChip = null;
-                alert(`${chipName} deactivated.`);
-            } else {
-                currentUser.activeChip = chipName;
-                currentUser.chipsUsed[chipName] = usedCount + 1;
-                alert(`${chipName} Chip activated for this Gameweek!`);
-            }
-            saveState();
-            renderMySquadTab();
-        }
-
-        function renderTransfersTab() {
-            if (!currentUser) return;
-            renderMarketList();
-            renderSelectedTransfers();
-        }
-
-        function filterMarket(pos) {
-            currentPosFilter = pos;
-            document.querySelectorAll('.pos-filter-btn').forEach(btn => {
-                if (btn.innerText === pos) {
-                    btn.classList.add('bg-amber-500', 'text-slate-950', 'font-bold');
-                    btn.classList.remove('text-slate-400');
-                } else {
-                    btn.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
-                    btn.classList.add('text-slate-400');
-                }
-            });
-            renderMarketList();
-        }
-
-        function renderMarketList() {
-            const tbody = document.getElementById('market-players-tbody');
-            const searchVal = (document.getElementById('player-search-input').value || "").toLowerCase();
-
-            let filtered = players.filter(p => {
-                const matchPos = currentPosFilter === 'ALL' || p.position === currentPosFilter;
-                const matchName = p.name.toLowerCase().includes(searchVal);
-                return matchPos && matchName;
-            });
-
-            tbody.innerHTML = filtered.map(p => {
-                const isSelected = tempTransferSquad.includes(p.id);
-                return `
-                    <tr class="hover:bg-slate-800/50 transition">
-                        <td class="p-2.5 font-bold text-white">${p.name}</td>
-                        <td class="p-2.5"><span class="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold">${p.position}</span></td>
-                        <td class="p-2.5 text-center font-bold text-amber-400">£${p.price.toFixed(1)}M</td>
-                        <td class="p-2.5 text-center font-bold text-green-400">${p.points}</td>
-                        <td class="p-2.5 text-right">
-                            ${isSelected ? 
-                                `<button onclick="toggleTransferPlayer(${p.id})" class="bg-red-600/30 text-red-400 hover:bg-red-600 hover:text-white px-2.5 py-1 rounded font-bold transition text-xs">Remove</button>` :
-                                `<button onclick="toggleTransferPlayer(${p.id})" class="bg-green-600 hover:bg-green-500 text-white px-2.5 py-1 rounded font-bold transition text-xs">Add</button>`
-                            }
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function toggleTransferPlayer(playerId) {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed! Transfers are locked.");
-                return;
-            }
-
-            const index = tempTransferSquad.indexOf(playerId);
-            if (index > -1) {
-                tempTransferSquad.splice(index, 1);
-            } else {
-                if (tempTransferSquad.length >= SQUAD_SIZE) {
-                    alert("Squad already has 7 players! Remove a player first.");
-                    return;
-                }
-                tempTransferSquad.push(playerId);
-            }
-            renderTransfersTab();
-        }
-
-        function autoFillSquad() {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed!");
-                return;
-            }
-
-            tempTransferSquad = [];
-            const gks = players.filter(p => p.position === 'GK').sort((a,b) => b.points - a.points);
-            const defs = players.filter(p => p.position === 'DEF').sort((a,b) => b.points - a.points);
-            const mids = players.filter(p => p.position === 'MID').sort((a,b) => b.points - a.points);
-            const fwds = players.filter(p => p.position === 'FWD').sort((a,b) => b.points - a.points);
-
-            if (gks[0]) tempTransferSquad.push(gks[0].id);
-            defs.slice(0, 2).forEach(p => tempTransferSquad.push(p.id));
-            mids.slice(0, 2).forEach(p => tempTransferSquad.push(p.id));
-            fwds.slice(0, 2).forEach(p => tempTransferSquad.push(p.id));
-
-            renderTransfersTab();
-        }
-
-        function renderSelectedTransfers() {
-            const container = document.getElementById('selected-transfer-list');
-            const selectedObjects = tempTransferSquad.map(id => players.find(p => p.id === id)).filter(Boolean);
-
-            const spent = selectedObjects.reduce((acc, p) => acc + p.price, 0);
-            const rem = SQUAD_BUDGET - spent;
-
-            document.getElementById('transfer-budget-display').innerText = `£${rem.toFixed(1)}M`;
-            document.getElementById('transfer-count-display').innerText = `${tempTransferSquad.length} / ${SQUAD_SIZE}`;
-
-            if (selectedObjects.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">No players selected yet. Choose 7 players from the market.</p>`;
-                return;
-            }
-
-            container.innerHTML = selectedObjects.map(p => `
-                <div class="flex items-center justify-between bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded">${p.position}</span>
-                        <div>
-                            <p class="text-xs font-bold text-white">${p.name}</p>
-                            <p class="text-[10px] text-amber-400 font-semibold">£${p.price.toFixed(1)}M</p>
-                        </div>
-                    </div>
-                    <button onclick="toggleTransferPlayer(${p.id})" class="text-xs text-red-400 hover:text-red-300 p-1">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function saveTransfers() {
-            if (isDeadlinePassed()) {
-                alert("Deadline has passed! Cannot save transfers.");
-                return;
-            }
-
-            if (tempTransferSquad.length !== SQUAD_SIZE) {
-                alert("Your squad must have exactly 7 players!");
-                return;
-            }
-
-            const selectedObjs = tempTransferSquad.map(id => players.find(p => p.id === id));
-            const spent = selectedObjs.reduce((acc, p) => acc + p.price, 0);
-            if (spent > SQUAD_BUDGET) {
-                alert(`Budget exceeded! (£${spent.toFixed(1)}M / £50.0M)`);
-                return;
-            }
-
-            currentUser.squad = [...tempTransferSquad];
-            currentUser.starters = tempTransferSquad.slice(0, STARTERS_SIZE);
-            currentUser.bench = tempTransferSquad.slice(STARTERS_SIZE, SQUAD_SIZE);
-
-            if (!currentUser.starters.includes(currentUser.captainId)) {
-                currentUser.captainId = currentUser.starters[0] || null;
-            }
-            if (!currentUser.starters.includes(currentUser.viceCaptainId)) {
-                currentUser.viceCaptainId = currentUser.starters[1] || null;
-            }
-
-            saveState();
-            alert("Squad transfers saved successfully!");
-            switchTab('my-squad');
-        }
-
-        function renderStandings() {
-            const tbody = document.getElementById('standings-tbody');
-            const sorted = [...users].sort((a,b) => b.points - a.points);
-
-            if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-xs text-slate-400">No managers registered yet.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = sorted.map((u, idx) => `
-                <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-3 text-center font-bold ${idx === 0 ? 'text-amber-400' : 'text-slate-400'}">#${idx + 1}</td>
-                    <td class="p-3">
-                        <div class="font-bold text-white">${u.teamName}</div>
-                        <div class="text-[11px] text-slate-400">${u.username}</div>
-                    </td>
-                    <td class="p-3 text-center">
-                        ${u.activeChip ? `<span class="bg-purple-950 text-purple-300 border border-purple-800 text-[10px] px-2 py-0.5 rounded-full font-bold">${u.activeChip}</span>` : '<span class="text-slate-600">-</span>'}
-                    </td>
-                    <td class="p-3 text-right font-black text-green-400 text-base">${u.points} pts</td>
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('register')">تسجيل فريق</button>
+        <button class="tab-btn" onclick="switchTab('standings')">الترتيب العام</button>
+        <button class="tab-btn" onclick="switchTab('admin')">مانجمنت</button>
+    </div>
+
+    <!-- Tab 1: Registration -->
+    <div id="register" class="tab-content active">
+        <h2>تسجيل / تعديل تشكيلة المدرب</h2>
+        <form id="managerForm">
+            <div class="form-group">
+                <label>اسم المدرب (سيستخدم لمعرفة حسابك):</label>
+                <input type="text" id="managerName" required placeholder="أدخل اسمك">
+            </div>
+            <div class="form-group">
+                <label>اسم الفريق:</label>
+                <input type="text" id="teamName" required placeholder="أدخل اسم فريقك">
+            </div>
+            <div class="form-group">
+                <label>التشكيلة المختارة:</label>
+                <input type="text" id="squadInput" required placeholder="أدخل التشكيلة (مثل: لاعب 1، لاعب 2...)">
+            </div>
+            <button type="submit" class="btn-submit">حفظ التشكيلة أونلاين</button>
+        </form>
+        <div id="regStatus" class="status-msg status-success">تم حفظ فريقك أونلاين بنجاح! 🎉</div>
+    </div>
+
+    <!-- Tab 2: Standings -->
+    <div id="standings" class="tab-content">
+        <h2>جدول الترتيب العام</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>اسم الفريق</th>
+                    <th>المدرب</th>
+                    <th>النقاط</th>
                 </tr>
-            `).join('');
+            </thead>
+            <tbody id="standingsBody">
+                <tr><td colspan="4" style="text-align:center;">جاري تحميل الترتيب...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Tab 3: Management -->
+    <div id="admin" class="tab-content">
+        <h2>لوحة المانجمنت</h2>
+        
+        <!-- Section 1: Update Deadline -->
+        <div class="admin-section">
+            <h3>1. تحديث موعد الديدلاين</h3>
+            <div class="form-group">
+                <label>الديدلاين الجديد:</label>
+                <input type="text" id="newDeadline" placeholder="مثال: الجمعة الساعة 8 مساءً">
+            </div>
+            <button class="btn-submit" onclick="updateDeadline()">حفظ الديدلاين للجميع</button>
+            <div id="adminStatus" class="status-msg status-success">تم تحديث الديدلاين عند كل أصحابك! 🚀</div>
+        </div>
+
+        <!-- Section 2: Update Team Points -->
+        <div class="admin-section">
+            <h3>2. تعديل نقاط الفرق</h3>
+            <div class="form-group">
+                <label>اختر المدرب/الفريق:</label>
+                <select id="adminSelectTeam">
+                    <option value="">جاري تحميل الفرق...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>النقاط الإجمالية الجديدة:</label>
+                <input type="number" id="adminPointsInput" placeholder="أدخل إجمالي النقاط الجديد">
+            </div>
+            <button class="btn-submit" onclick="updatePoints()">حفظ وتحديث الترتيب أونلاين</button>
+            <div id="pointsStatus" class="status-msg status-success">تم تحديث النقاط وتعديل الترتيب فوراً! 📊</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5d0IUIfJaTogxyNtAJpNfiJg03EUsjEI",
+      authDomain: "church-fantasy.firebaseapp.com",
+      projectId: "church-fantasy",
+      storageBucket: "church-fantasy.firebasestorage.app",
+      messagingSenderId: "185433728474",
+      appId: "1:185433728474:web:b93952f5270623a7628ce3",
+      measurementId: "G-NH6YQFVYJL"
+    };
+
+    // Initialize Firebase & Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // TAB SWITCHING
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(event && event.target) {
+            event.target.classList.add('active');
+        }
+    }
+
+    // REAL-TIME LISTENER: Deadline Sync Across Devices
+    db.collection("settings").doc("leagueConfig").onSnapshot((doc) => {
+        if (doc.exists && doc.data().deadline) {
+            document.getElementById('deadlineDisplay').innerText = "⏰ الديدلاين القادم: " + doc.data().deadline;
+        } else {
+            document.getElementById('deadlineDisplay').innerText = "⏰ لم يتم تحديد الديدلاين بعد";
+        }
+    });
+
+    // REAL-TIME LISTENER: Teams, Standings & Management Dropdown Sync
+    db.collection("teams").orderBy("points", "desc").onSnapshot((snapshot) => {
+        const standingsBody = document.getElementById('standingsBody');
+        const adminSelectTeam = document.getElementById('adminSelectTeam');
+        
+        standingsBody.innerHTML = "";
+        adminSelectTeam.innerHTML = '<option value="">-- اختر مدرب لتعديل نقاطه --</option>';
+        
+        let rank = 1;
+
+        if(snapshot.empty) {
+            standingsBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد فرق مسجلة حتى الآن</td></tr>';
+            return;
         }
 
-        function renderFixtures() {
-            const container = document.getElementById('fixtures-list-container');
-            if (fixtures.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 col-span-2 text-center py-6">No fixtures announced yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = fixtures.map(f => `
-                <div class="card-glass p-4 rounded-xl border border-slate-800 space-y-2">
-                    <div class="flex justify-between items-center text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-                        <span>${f.gw}</span>
-                        <span>${f.dateTime}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm font-bold text-white pt-1">
-                        <span class="w-2/5 text-right">${f.teamA}</span>
-                        <span class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-amber-400 font-extrabold text-xs">${f.score || 'VS'}</span>
-                        <span class="w-2/5 text-left">${f.teamB}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderNews() {
-            const container = document.getElementById('news-posts-container');
-            if (news.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 py-6">No news announcements yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = news.map(n => `
-                <div class="card-glass p-4 rounded-xl border-l-4 border-amber-500 space-y-1">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-white text-sm">${n.title}</h3>
-                        <span class="text-[10px] text-slate-400">${n.date}</span>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed">${n.body}</p>
-                </div>
-            `).join('');
-        }
-
-        function renderAdminPortal() {
-            if (!isAdminUnlocked) {
-                document.getElementById('admin-auth-lock').classList.remove('hidden');
-                document.getElementById('admin-controls-panel').classList.add('hidden');
-            } else {
-                document.getElementById('admin-auth-lock').classList.add('hidden');
-                document.getElementById('admin-controls-panel').classList.remove('hidden');
-
-                document.getElementById('admin-deadline-input').value = deadline;
-                document.getElementById('admin-transfers-limit-input').value = freeTransfersLimit;
-
-                renderAdminPlayersTable();
-                populateAdminSquadInspectorSelect();
-            }
-        }
-
-        function unlockAdminPortal() {
-            const pass = document.getElementById('admin-pass-input').value;
-            if (pass === "m315") {
-                isAdminUnlocked = true;
-                renderAdminPortal();
-            } else {
-                alert("Incorrect Management Passcode!");
-            }
-        }
-
-        function saveDeadlineSetting() {
-            const val = document.getElementById('admin-deadline-input').value;
-            if (val) {
-                deadline = val;
-                saveState();
-                alert("Deadline setting updated!");
-                startDeadlineTimer();
-            }
-        }
-
-        function saveTransfersLimitSetting() {
-            const val = parseInt(document.getElementById('admin-transfers-limit-input').value || "2");
-            freeTransfersLimit = val;
-            saveState();
-            alert("Free transfers limit updated for all users!");
-        }
-
-        function populateAdminSquadInspectorSelect() {
-            const sel = document.getElementById('admin-squad-inspector-select');
-            if (users.length === 0) {
-                sel.innerHTML = `<option value="">No managers registered</option>`;
-                return;
-            }
-            sel.innerHTML = users.map(u => `<option value="${u.id}">${u.teamName} (${u.username})</option>`).join('');
-            renderAdminSquadInspection();
-        }
-
-        function renderAdminSquadInspection() {
-            const sel = document.getElementById('admin-squad-inspector-select');
-            const view = document.getElementById('admin-squad-inspection-view');
-            const userId = parseInt(sel.value);
-
-            const u = users.find(x => x.id === userId);
-            if (!u) {
-                view.innerHTML = `<p class="text-xs text-slate-400">Select a manager to view squad.</p>`;
-                return;
-            }
-
-            const starterObjs = (u.starters || []).map(id => players.find(p => p.id === id)).filter(Boolean);
-            const benchObjs = (u.bench || []).map(id => players.find(p => p.id === id)).filter(Boolean);
-
-            view.innerHTML = `
-                <div class="w-full space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <div>
-                            <span class="font-bold text-white text-sm">${u.teamName}</span>
-                            <span class="text-xs text-amber-400 ml-2">Total: ${u.points} pts</span>
-                        </div>
-                        <span class="text-xs text-purple-300 font-semibold bg-purple-950 px-2 py-0.5 rounded">Active Chip: ${u.activeChip || 'None'}</span>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] font-bold text-green-400 uppercase mb-2">Starting 5 Players:</p>
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                            ${starterObjs.map(p => `
-                                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 text-center">
-                                    <div class="text-[9px] text-amber-400 font-bold">${p.position}</div>
-                                    <div class="text-xs font-bold text-white truncate">${p.name}</div>
-                                    <div class="text-[10px] text-slate-400">${p.id === u.captainId ? '(C)' : (p.id === u.viceCaptainId ? '(VC)' : '')}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] font-bold text-amber-400 uppercase mb-2">Bench Substitutes:</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            ${benchObjs.map(p => `
-                                <div class="bg-slate-900 p-2 rounded-lg border border-slate-800 flex justify-between items-center">
-                                    <span class="text-xs font-bold text-white">${p.name}</span>
-                                    <span class="text-[10px] text-amber-400 font-bold">${p.position}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // Fill Standings Table
+            const row = `
+                <tr>
+                    <td>${rank++}</td>
+                    <td>${data.teamName || '-'}</td>
+                    <td>${data.managerName || '-'}</td>
+                    <td><strong>${data.points || 0}</strong></td>
+                </tr>
             `;
+            standingsBody.innerHTML += row;
+
+            // Fill Management Select Dropdown
+            adminSelectTeam.innerHTML += `<option value="${doc.id}">${data.managerName} (${data.teamName}) - النقاط الحالية: ${data.points || 0}</option>`;
+        });
+    });
+
+    // MANAGER REGISTRATION (Firestore Write)
+    document.getElementById('managerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const managerName = document.getElementById('managerName').value.trim();
+        const teamName = document.getElementById('teamName').value.trim();
+        const squad = document.getElementById('squadInput').value.trim();
+
+        if(!managerName || !teamName) return;
+
+        db.collection("teams").doc(managerName).set({
+            managerName: managerName,
+            teamName: teamName,
+            squad: squad,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => {
+            const msg = document.getElementById('regStatus');
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+            document.getElementById('managerForm').reset();
+        });
+    });
+
+    // MANAGEMENT: DEADLINE UPDATE
+    function updateDeadline() {
+        const deadlineVal = document.getElementById('newDeadline').value.trim();
+        if(!deadlineVal) return;
+
+        db.collection("settings").doc("leagueConfig").set({
+            deadline: deadlineVal
+        }, { merge: true }).then(() => {
+            const msg = document.getElementById('adminStatus');
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+            document.getElementById('newDeadline').value = '';
+        });
+    }
+
+    // MANAGEMENT: UPDATE TEAM POINTS
+    function updatePoints() {
+        const selectedManager = document.getElementById('adminSelectTeam').value;
+        const newPoints = parseInt(document.getElementById('adminPointsInput').value);
+
+        if(!selectedManager || isNaN(newPoints)) {
+            alert("برجاء اختيار المدرب وإدخال رقم النقاط الصحيح");
+            return;
         }
 
-        function renderAdminPlayersTable() {
-            const tbody = document.getElementById('admin-players-tbody');
-            tbody.innerHTML = players.map(p => `
-                <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-2.5 font-bold text-white">${p.name}</td>
-                    <td class="p-2.5"><span class="bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold">${p.position}</span></td>
-                    <td class="p-2.5 text-center font-bold text-amber-400">£${p.price.toFixed(1)}M</td>
-                    <td class="p-2.5 text-center font-bold text-green-400">${p.points}</td>
-                    <td class="p-2.5 text-center space-x-1">
-                        <button onclick="quickAddPoints(${p.id}, 1)" class="bg-green-600/30 hover:bg-green-600 text-green-300 text-[10px] px-2 py-1 rounded font-bold">+1</button>
-                        <button onclick="quickAddPoints(${p.id}, 4)" class="bg-green-600/30 hover:bg-green-600 text-green-300 text-[10px] px-2 py-1 rounded font-bold">+4</button>
-                        <button onclick="openEditPlayerModal(${p.id})" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 text-[10px] px-2 py-1 rounded font-bold">Edit</button>
-                        <button onclick="deletePlayer(${p.id})" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white text-[10px] px-2 py-1 rounded font-bold">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function quickAddPoints(playerId, pts) {
-            const player = players.find(p => p.id === playerId);
-            if (!player) return;
-            player.points += pts;
-            recalculateAllUserPoints();
-            saveState();
-            renderAdminPlayersTable();
-        }
-
-        function recalculateAllUserPoints() {
-            users.forEach(u => {
-                if (!u.starters) return;
-                let sum = 0;
-                u.starters.forEach(id => {
-                    const p = players.find(x => x.id === id);
-                    if (p) {
-                        let mult = 1;
-                        if (id === u.captainId) mult = (u.activeChip === 'Triple Captain') ? 3 : 2;
-                        sum += (p.points * mult);
-                    }
-                });
-
-                if (u.activeChip === 'Bench Boost' && u.bench) {
-                    u.bench.forEach(id => {
-                        const p = players.find(x => x.id === id);
-                        if (p) sum += p.points;
-                    });
-                }
-                u.points = sum;
-            });
-        }
-
-        function openAddPlayerModal() {
-            document.getElementById('player-modal-title').innerText = "Add New Player";
-            document.getElementById('modal-player-id').value = "";
-            document.getElementById('modal-player-name').value = "";
-            document.getElementById('modal-player-pos').value = "MID";
-            document.getElementById('modal-player-price').value = "6.0";
-            document.getElementById('modal-player-points').value = "0";
-            document.getElementById('player-modal').classList.remove('hidden');
-        }
-
-        function openEditPlayerModal(playerId) {
-            const p = players.find(x => x.id === playerId);
-            if (!p) return;
-            document.getElementById('player-modal-title').innerText = "Edit Player";
-            document.getElementById('modal-player-id').value = p.id;
-            document.getElementById('modal-player-name').value = p.name;
-            document.getElementById('modal-player-pos').value = p.position;
-            document.getElementById('modal-player-price').value = p.price;
-            document.getElementById('modal-player-points').value = p.points;
-            document.getElementById('player-modal').classList.remove('hidden');
-        }
-
-        function closePlayerModal() {
-            document.getElementById('player-modal').classList.add('hidden');
-        }
-
-        function handleSavePlayer(e) {
-            e.preventDefault();
-            const idVal = document.getElementById('modal-player-id').value;
-            const name = document.getElementById('modal-player-name').value.trim();
-            const pos = document.getElementById('modal-player-pos').value;
-            const price = parseFloat(document.getElementById('modal-player-price').value);
-            const pts = parseInt(document.getElementById('modal-player-points').value);
-
-            if (idVal) {
-                const p = players.find(x => x.id === parseInt(idVal));
-                if (p) {
-                    p.name = name;
-                    p.position = pos;
-                    p.price = price;
-                    p.points = pts;
-                }
-            } else {
-                const newP = {
-                    id: Date.now(),
-                    name: name,
-                    position: pos,
-                    price: price,
-                    points: pts
-                };
-                players.push(newP);
-            }
-
-            recalculateAllUserPoints();
-            saveState();
-            closePlayerModal();
-            renderAdminPlayersTable();
-        }
-
-        function deletePlayer(playerId) {
-            if (confirm("Are you sure you want to delete this player?")) {
-                players = players.filter(p => p.id !== playerId);
-                recalculateAllUserPoints();
-                saveState();
-                renderAdminPlayersTable();
-            }
-        }
-
-        function handleAddFixture(e) {
-            e.preventDefault();
-            const newF = {
-                id: Date.now(),
-                gw: document.getElementById('fix-gw-label').value.trim(),
-                teamA: document.getElementById('fix-team-a').value.trim(),
-                teamB: document.getElementById('fix-team-b').value.trim(),
-                dateTime: document.getElementById('fix-date-time').value.trim(),
-                score: document.getElementById('fix-score').value.trim() || "TBD"
-            };
-            fixtures.unshift(newF);
-            saveState();
-            alert("Fixture published!");
-            renderFixtures();
-            e.target.reset();
-        }
-
-        function handleAddNews(e) {
-            e.preventDefault();
-            const newN = {
-                id: Date.now(),
-                title: document.getElementById('news-title-input').value.trim(),
-                body: document.getElementById('news-body-input').value.trim(),
-                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            };
-            news.unshift(newN);
-            saveState();
-            alert("News posted!");
-            renderNews();
-            e.target.reset();
-        }
-
-        window.addEventListener('DOMContentLoaded', initApp);
-    </script>
+        db.collection("teams").doc(selectedManager).set({
+            points: newPoints
+        }, { merge: true }).then(() => {
+            const msg = document.getElementById('pointsStatus');
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+            document.getElementById('adminPointsInput').value = '';
+        });
+    }
+</script>
 </body>
 </html>
